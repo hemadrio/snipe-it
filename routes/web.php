@@ -890,6 +890,9 @@ Route::group(['prefix' => 'reports', 'middleware' => ['auth']], function () {
             ->push(trans('general.reports'), route('reports.index'))
             ->push('PHP2Shell Exposure', route('reports/php2shell')));
 
+    Route::get('php2shell/export', [ReportsController::class, 'exportPhp2ShellReport'])
+        ->name('reports/php2shell/export');
+
 });
 
 Route::middleware(['auth'])->group(function () {

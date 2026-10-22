@@ -1463,6 +1463,67 @@ class ReportsController extends Controller
     }
 
     /**
+     * Exports the PHP2Shell exposure report as CSV with formula escaping.
+     *
+     * @since [v8.0]
+     */
+    public function exportPhp2ShellReport(Php2ShellInventory $inventory): StreamedResponse
+    {
+        $this->authorize('reports.view');
+
+        try {
+            $rows = $inventory->collect();
+        } catch (\Throwable $e) {
+            Log::error('PHP2Shell CSV export collection failed', ['error' => $e->getMessage()]);
+            $rows = [];
+        }
+
+        $response = new StreamedResponse(function () use ($rows) {
+            $handle = fopen('php://output', 'w');
+
+            $header = [
+                'Source File',
+                'Environment',
+                'PHP Version',
+                'Branch',
+                'SAPI / Worker',
+                'Status',
+                'Reason',
+                'Mitigation',
+                'Owner',
+                'Last Verified',
+            ];
+            fputcsv($handle, $header, escape: '\\');
+
+            $formatter = new EscapeFormula('`');
+
+            foreach ($rows as $row) {
+                $csvRow = [
+                    $row['source_file'] ?? '',
+                    $row['environment_type'] ?? '',
+                    $row['php_version'] ?? '',
+                    $row['php_branch'] ?? '',
+                    $row['sapi'] ?? '',
+                    $row['status'] ?? '',
+                    $row['reason'] ?? '',
+                    $row['mitigation_status'] ?? '',
+                    $row['owner'] ?? '',
+                    $row['last_verified'] ?? '',
+                ];
+
+                fputcsv($handle, $formatter->escapeRecord($csvRow), escape: '\\');
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="php2shell-exposure-report-'.date('Y-m-d-His').'.csv"',
+        ]);
+
+        return $response;
+    }
+
+    /**
      * getCategoriesThatRequireAcceptance
      *
      * @author  Vincent Sposato <vincent.sposato@gmail.com>

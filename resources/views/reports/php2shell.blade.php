@@ -17,6 +17,14 @@
                         Runtime inventory for CVE-2026-109618 and CVE-2026-109619.
                         Approved patched floors: PHP 8.2.35, 8.3.36, 8.4.27, 8.5.12.
                     </p>
+                    @if(count($rows) > 0)
+                        <div class="pull-right">
+                            <a href="{{ route('reports/php2shell/export') }}" class="btn btn-default btn-sm">
+                                <i class="fas fa-download" aria-hidden="true"></i>
+                                Export CSV
+                            </a>
+                        </div>
+                    @endif
                 </div>
                 <div class="box-body">
                     @if(count($rows) === 0)
