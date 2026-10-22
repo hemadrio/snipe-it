@@ -160,6 +160,43 @@ install_packages () {
   esac
 }
 
+# PHP2Shell patched floor verification (CVE-2026-109618, CVE-2026-109619)
+# Usage: verify_php_floor <minimum_version_id> <floor_label>
+# Example: verify_php_floor 80235 "8.2.35"
+# Uses PHP_VERSION_ID which is immune to distribution version suffixes.
+# Newer safe versions (e.g. 8.2.36) are allowed; only older patch levels fail.
+verify_php_floor () {
+  local min_version_id="$1"
+  local floor_label="$2"
+
+  echo "* Verifying PHP version meets patched floor ${floor_label}..."
+
+  if ! command -v php &> /dev/null; then
+    echo -e "\e[31m** ERROR: php executable not found after package installation. Cannot verify runtime safety.\e[0m"
+    exit 1
+  fi
+
+  local php_version_id
+  php_version_id=$(php -r 'echo PHP_VERSION_ID;' 2>/dev/null)
+
+  if [ -z "$php_version_id" ]; then
+    echo -e "\e[31m** ERROR: Could not determine PHP_VERSION_ID. php -r may be disabled.\e[0m"
+    exit 1
+  fi
+
+  local php_version
+  php_version=$(php -r 'echo PHP_VERSION;' 2>/dev/null)
+
+  if [ "$php_version_id" -lt "$min_version_id" ]; then
+    echo -e "\e[31m** ERROR: PHP ${php_version} (ID: ${php_version_id}) is below the patched floor ${floor_label} (minimum ID: ${min_version_id})."
+    echo -e "   Approved patched floors: 8.2.35, 8.3.36, 8.4.27, 8.5.12"
+    echo -e "   The installer cannot continue with a vulnerable PHP runtime.\e[0m"
+    exit 1
+  fi
+
+  echo "  PHP2Shell floor check passed: PHP ${php_version} meets patched floor ${floor_label}."
+}
+
 create_virtualhost () {
   {
     echo "<VirtualHost *:80>"
@@ -466,6 +503,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="mariadb-server mariadb-client apache2 libapache2-mod-php8.4 php8.4  php8.4-curl php8.4-mysql php8.4-gd php8.4-ldap php8.4-zip php8.4-mbstring php8.4-xml php8.4-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80427 "8.4.27"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -503,6 +541,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -540,6 +579,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -577,6 +617,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -618,6 +659,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="cron mariadb-server mariadb-client apache2 libapache2-mod-php php php-curl php-mysql php-gd php-ldap php-zip php-mbstring php-xml php-bcmath curl git unzip wget"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -669,6 +711,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="cron mariadb-server mariadb-client apache2 libapache2-mod-php8.3 php8.3  php8.3-curl php8.3-mysql php8.3-gd php8.3-ldap php8.3-zip php8.3-mbstring php8.3-xml php8.3-bcmath php8.3-cli curl git unzip"
         install_packages
+        verify_php_floor 80336 "8.3.36"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -710,6 +753,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="cron mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -754,6 +798,7 @@ case $distro in
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="cron mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -814,6 +859,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="mariadb-server mariadb-client apache2 libapache2-mod-php8.2 php8.2  php8.2-curl php8.2-mysql php8.2-gd php8.2-ldap php8.2-zip php8.2-mbstring php8.2-xml php8.2-bcmath curl git unzip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -853,6 +899,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="httpd mariadb-server git unzip php php-mysqlnd php-bcmath php-embedded php-gd php-mbstring php-ldap php-json php-simplexml php-process php-zip  php-sodium"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -894,6 +941,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="httpd mariadb-server git unzip php php-mysqlnd php-bcmath php-embedded php-gd php-mbstring php-ldap php-json php-simplexml php-process php-zip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -937,6 +985,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB and other requirements."
         PACKAGES="httpd mariadb-server git unzip php php-mysqlnd php-bcmath php-embedded php-gd php-mbstring php-ldap php-json php-simplexml php-process php-zip"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -980,6 +1029,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB, and other requirements."
         PACKAGES="httpd mariadb-server git unzip php-mysqlnd php-bcmath php-cli php-embedded php-gd php-mbstring php-ldap php-simplexml php-process php-sodium php-pecl-zip php-fpm"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
@@ -1027,6 +1077,7 @@ EOL
         echo "* Installing Apache httpd, PHP, MariaDB, and other requirements."
         PACKAGES="httpd mariadb-server git unzip php-mysqlnd php-bcmath php-cli php-embedded php-gd php-mbstring php-ldap php-simplexml php-process php-sodium php-pecl-zip php-fpm"
         install_packages
+        verify_php_floor 80235 "8.2.35"
 
         echo "* Configuring Apache."
         create_virtualhost
