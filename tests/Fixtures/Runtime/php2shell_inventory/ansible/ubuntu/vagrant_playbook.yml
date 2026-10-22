@@ -1,0 +1,33 @@
+---
+- name: Set up local server
+  hosts: all
+  remote_user: vagrant
+  become_user: root
+  become_method: sudo
+  vars:
+    app_path: "/var/www/snipeit"
+    fqdn: "localhost"
+  tasks:
+    - name: Installing Apache httpd, PHP, MariaDB and other requirements.
+      become: true
+      apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - php
+          - php-curl
+          - php-mysql
+          - php-gd
+          - php-ldap
+          - php-zip
+          - php-mbstring
+    - name: Install Apache 2.4
+      apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - apache2
+          - libapache2-mod-php
+      become: true
