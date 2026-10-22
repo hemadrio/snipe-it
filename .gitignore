@@ -96,3 +96,7 @@ storage/ldap_client_tls.key
 boost.json
 opencode.json
 /.ai/mcp
+.forge-commit-ready
+.forge/project-id
+.forge/hook-version
+.forge/changed-files.log

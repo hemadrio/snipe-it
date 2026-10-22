@@ -47,6 +47,26 @@ jobs:
         with:
           persist-credentials: false
 
+      # PHP2Shell patched floor verification (CVE-2026-109618, CVE-2026-109619)
+      # Approved floors: 8.2.35 (80235), 8.3.36 (80336), 8.4.27 (80427), 8.5.12 (80512)
+      - name: Verify PHP meets PHP2Shell patched floor
+        run: |
+          php -r '
+            $floors = ["8.2" => 80235, "8.3" => 80336, "8.4" => 80427, "8.5" => 80512];
+            $branch = PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;
+            echo "PHP " . PHP_VERSION . " (branch $branch, ID: " . PHP_VERSION_ID . ")\n";
+            if (!isset($floors[$branch])) {
+              fwrite(STDERR, "ERROR: PHP branch $branch is not tracked in the PHP2Shell security policy.\n");
+              exit(1);
+            }
+            if (PHP_VERSION_ID < $floors[$branch]) {
+              fwrite(STDERR, "ERROR: PHP " . PHP_VERSION . " is below the patched floor for branch $branch (minimum ID: " . $floors[$branch] . ").\n");
+              fwrite(STDERR, "Approved patched floors: 8.2.35, 8.3.36, 8.4.27, 8.5.12\n");
+              exit(1);
+            }
+            echo "PHP2Shell floor check passed.\n";
+          '
+
       - name: Get Composer Cache Directory
         id: composer-cache
         run: |

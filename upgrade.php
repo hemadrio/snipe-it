@@ -278,6 +278,40 @@ if(!$skip_php_checks){
         echo "\e[91m!!!!!!!!!!!!!!!!!!!!!!!!! ABORTING THE UPGRADER !!!!!!!!!!!!!!!!!!!!!!\n";
         exit(1);
     }
+
+    // PHP2Shell patched floor verification (CVE-2026-109618, CVE-2026-109619)
+    // Approved floors: 8.2.35, 8.3.36, 8.4.27, 8.5.12
+    // Uses PHP_VERSION_ID which is immune to distribution version suffixes.
+    $php2shell_floors = [
+        '8.2' => 80235,
+        '8.3' => 80336,
+        '8.4' => 80427,
+        '8.5' => 80512,
+    ];
+
+    $php_branch = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+
+    if (isset($php2shell_floors[$php_branch])) {
+        $required_floor_id = $php2shell_floors[$php_branch];
+
+        if (PHP_VERSION_ID < $required_floor_id) {
+            echo "\n\e[91m!!!!!!!!!!!!! PHP2SHELL SECURITY FLOOR CHECK FAILED !!!!!!!!!!!!!!\n";
+            echo "PHP " . PHP_VERSION . " (ID: " . PHP_VERSION_ID . ") is below the patched floor for branch {$php_branch}.\n";
+            echo "Minimum required PHP_VERSION_ID: {$required_floor_id}\n";
+            echo "Approved patched floors: 8.2.35, 8.3.36, 8.4.27, 8.5.12\n";
+            echo "Please upgrade PHP {$php_branch} to at least the approved patched floor.\n";
+            echo "!!!!!!!!!!!!!!!!!!!!!!!!! ABORTING THE UPGRADER !!!!!!!!!!!!!!!!!!!!!!\e[39m\n\n";
+            exit(1);
+        }
+
+        echo $success_icon . " PHP2Shell floor check passed: PHP " . PHP_VERSION . " meets patched floor for branch {$php_branch}.\n";
+    } else {
+        echo "\e[91m!!!!!!!!!!!!! PHP2SHELL SECURITY FLOOR CHECK FAILED !!!!!!!!!!!!!!\n";
+        echo "PHP branch {$php_branch} is not tracked in the PHP2Shell security policy.\n";
+        echo "Supported branches: 8.2, 8.3, 8.4, 8.5\n";
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!! ABORTING THE UPGRADER !!!!!!!!!!!!!!!!!!!!!!\e[39m\n\n";
+        exit(1);
+    }
 }
 echo "Checking Required PHP extensions... \n\n";
 
