@@ -41,6 +41,24 @@ file_env MAIL_PORT
 file_env MAIL_USERNAME
 file_env MAIL_PASSWORD
 
+# PHP2Shell patched floor verification (CVE-2026-109618, CVE-2026-109619)
+# Approved floors: 8.2.35 (80235), 8.3.36 (80336), 8.4.27 (80427), 8.5.12 (80512)
+PHP2SHELL_CHECK=$(php -r '
+  $floors = ["8.2" => 80235, "8.3" => 80336, "8.4" => 80427, "8.5" => 80512];
+  $branch = PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;
+  if (!isset($floors[$branch])) {
+    fwrite(STDERR, "FATAL: PHP branch $branch is not tracked in the PHP2Shell security policy. Container cannot start.\n");
+    exit(1);
+  }
+  if (PHP_VERSION_ID < $floors[$branch]) {
+    fwrite(STDERR, "FATAL: PHP " . PHP_VERSION . " is below the patched floor for branch $branch (minimum ID: " . $floors[$branch] . "). Container cannot start.\n");
+    fwrite(STDERR, "Approved patched floors: 8.2.35, 8.3.36, 8.4.27, 8.5.12\n");
+    exit(1);
+  }
+  echo "PHP2Shell floor check passed: PHP " . PHP_VERSION . " (branch $branch).\n";
+' 2>&1) || { echo "$PHP2SHELL_CHECK"; exit 1; }
+echo "$PHP2SHELL_CHECK"
+
 # fix key if needed
 if [ -z "$APP_KEY" -a -z "$APP_KEY_FILE" ]
 then
