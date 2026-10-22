@@ -884,6 +884,12 @@ Route::group(['prefix' => 'reports', 'middleware' => ['auth']], function () {
     Route::redirect('unaccepted_assets', '/unaccepted-acceptances', 301);
     Route::redirect('unaccepted_assets/deleted', '/unaccepted-acceptances?deleted=deleted', 301);
 
+    Route::get('php2shell', [ReportsController::class, 'getPhp2ShellReport'])
+        ->name('reports/php2shell')
+        ->breadcrumbs(fn (Trail $trail) => $trail->parent('home')
+            ->push(trans('general.reports'), route('reports.index'))
+            ->push('PHP2Shell Exposure', route('reports/php2shell')));
+
 });
 
 Route::middleware(['auth'])->group(function () {

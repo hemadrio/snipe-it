@@ -16,6 +16,7 @@ use App\Models\License;
 use App\Models\Maintenance;
 use App\Models\ReportTemplate;
 use App\Models\Setting;
+use App\Services\Runtime\Php2ShellInventory;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -1429,6 +1430,36 @@ class ReportsController extends Controller
             ->select('id')
             ->get()
             ->toArray(), 'id');
+    }
+
+    /**
+     * Returns a view that displays the PHP2Shell exposure report.
+     *
+     * @since [v8.0]
+     */
+    public function getPhp2ShellReport(Php2ShellInventory $inventory): View
+    {
+        $this->authorize('reports.view');
+
+        try {
+            $rows = $inventory->collect();
+        } catch (\Throwable $e) {
+            Log::error('PHP2Shell inventory collection failed', ['error' => $e->getMessage()]);
+            $rows = [[
+                'source_file' => 'N/A',
+                'environment_type' => 'N/A',
+                'php_version' => 'N/A',
+                'php_branch' => 'N/A',
+                'sapi' => 'N/A',
+                'status' => 'collection_failed',
+                'reason' => 'Inventory collection encountered an error. Check the application log for details.',
+                'mitigation_status' => 'N/A',
+                'owner' => 'N/A',
+                'last_verified' => 'N/A',
+            ]];
+        }
+
+        return view('reports/php2shell', compact('rows'));
     }
 
     /**
